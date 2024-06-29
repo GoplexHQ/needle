@@ -90,7 +90,7 @@ func main() {
 
 ### Injecting Dependencies
 
-Needle can inject dependencies into struct fields.
+Needle can inject dependencies into struct fields using the `needle:"inject"` tag.
 
 ```go
 type Dep struct {
@@ -98,7 +98,7 @@ type Dep struct {
 }
 
 type MyService struct {
-    Dep *Dep
+    Dep *Dep `needle:"inject"`
 }
 
 func main() {
@@ -116,6 +116,9 @@ func main() {
     fmt.Println(myService.Dep.Name) // Output: myDep
 }
 ```
+
+> **Note:** Fields that need dependency injection should be annotated with the `needle:"inject"` tag.
+> This tells Needle to inject the corresponding dependency into the field.
 
 ### Custom Store
 

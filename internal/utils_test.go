@@ -25,3 +25,12 @@ func TestIsStructType(t *testing.T) {
 	assert.False(t, internal.IsStructType(reflect.TypeOf(0)))
 	assert.False(t, internal.IsStructType(reflect.TypeOf(nil)))
 }
+
+func TestIsPointerValue(t *testing.T) {
+	assert.True(t, internal.IsPointerValue(reflect.ValueOf(&struct{}{})))
+	assert.False(t, internal.IsPointerValue(reflect.ValueOf(struct{}{})))
+	assert.False(t, internal.IsPointerValue(reflect.ValueOf([]string{})))
+	assert.False(t, internal.IsPointerValue(reflect.ValueOf(map[string]any{})))
+	assert.False(t, internal.IsPointerValue(reflect.ValueOf(0)))
+	assert.False(t, internal.IsPointerValue(reflect.ValueOf(nil)))
+}

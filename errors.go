@@ -8,4 +8,5 @@ var (
 	ErrInvalidType         = errors.New("service type is invalid")
 	ErrServiceTypeMismatch = errors.New("resolved service type does not match the given type")
 	ErrInvalidLifetime     = errors.New("invalid lifetime")
+	ErrFieldPtr            = errors.New("injectable field is not a pointer")
 )

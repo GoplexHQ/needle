@@ -13,7 +13,9 @@ func TestNeedle_InjectStructFields(t *testing.T) {
 
 	type Dep struct{ name string }
 
-	type TestStruct struct{ Dep *Dep }
+	type TestStruct struct {
+		Dep *Dep `needle:"inject"`
+	}
 
 	require.NoError(t, needle.RegisterInstance(&Dep{name: "myDep"}))
 
@@ -31,7 +33,9 @@ func TestNeedle_InjectStructFieldsFromStore(t *testing.T) {
 
 	type Dep struct{ name string }
 
-	type TestStruct struct{ Dep *Dep }
+	type TestStruct struct {
+		Dep *Dep `needle:"inject"`
+	}
 
 	require.NoError(t, needle.RegisterInstanceToStore(store, &Dep{name: "myDep"}))
 
@@ -47,8 +51,15 @@ func TestNeedle_InjectStructFieldsInvalidType(t *testing.T) {
 
 	var invalidType int
 
-	injErr := needle.InjectStructFields(&invalidType)
-	assert.ErrorIs(t, injErr, needle.ErrInvalidType)
+	require.ErrorIs(t, needle.InjectStructFields(&invalidType), needle.ErrInvalidType)
+
+	type Dep struct{}
+
+	type TestStruct struct {
+		Dep Dep `needle:"inject"`
+	}
+
+	require.ErrorIs(t, needle.InjectStructFields(&TestStruct{}), needle.ErrFieldPtr)
 }
 
 func TestNeedle_InjectStructFieldsNotRegistered(t *testing.T) {

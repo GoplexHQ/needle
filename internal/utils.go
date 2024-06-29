@@ -13,3 +13,7 @@ func ServiceName(rt reflect.Type) string {
 func IsStructType(rt reflect.Type) bool {
 	return rt != nil && rt.Kind() == reflect.Struct
 }
+
+func IsPointerValue(rt reflect.Value) bool {
+	return rt.Kind() == reflect.Ptr
+}
