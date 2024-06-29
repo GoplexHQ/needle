@@ -8,6 +8,7 @@ init:
 	go install github.com/daixiang0/gci@latest
 	go mod tidy
 	echo "#\!/bin/sh\nmake" > .git/hooks/pre-push
+	chmod ug+x .git/hooks/pre-push
 
 # Properly formats the project's source files
 .PHONY: fmt
