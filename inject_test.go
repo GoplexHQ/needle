@@ -51,7 +51,7 @@ func TestNeedle_InjectStructFieldsInvalidType(t *testing.T) {
 
 	var invalidType int
 
-	require.ErrorIs(t, needle.InjectStructFields(&invalidType), needle.ErrInvalidServiceType)
+	require.ErrorIs(t, needle.InjectStructFields(&invalidType), needle.ErrInvalidDestType)
 
 	type Dep struct{}
 
