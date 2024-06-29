@@ -1,0 +1,29 @@
+linters:
+  enable-all: true
+  disable:
+    - copyloopvar # deprecated
+    - intrange # deprecated
+    - gomoddirectives # deprecated
+    - execinquery # deprecated
+    - gomnd # deprecated
+    - paralleltest
+
+linters-settings:
+  depguard:
+    rules:
+      whitelist:
+        list-mode: strict # deny unless explicitly allowed
+        files:
+          - $all
+          - "!$test"
+        allow:
+          - $gostd
+          - github.com/goplexhq/needle/internal
+
+  gci:
+    sections:
+      - standard
+      - default
+      - "prefix(github.com/goplexhq/needle/internal)"
+      - blank
+      - dot

@@ -10,7 +10,7 @@ type Store struct {
 
 // NewStore creates and returns a new instance of Store.
 func NewStore() *Store {
-	return &Store{
+	return &Store{ //nolint:exhaustruct
 		entries: make(map[string]entry),
 	}
 }
@@ -41,7 +41,7 @@ func (s *Store) has(name string) bool {
 }
 
 // RegisteredServices returns a list of names of all registered services.
-// Service names are stored in the following form "<pkg>.<service>"
+// Service names are stored in the following form "<pkg>.<service>".
 func (s *Store) RegisteredServices() []string {
 	s.lock.RLock()
 	defer s.lock.RUnlock()

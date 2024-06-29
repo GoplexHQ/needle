@@ -51,23 +51,23 @@ func ResolveFromStore[T any](store *Store) (*T, error) {
 
 // resolveName resolves the instance by its name from the store.
 func resolveName(store *Store, name string) (any, error) {
-	e, ok := store.get(name)
+	service, ok := store.get(name)
 	if !ok {
 		return nil, fmt.Errorf("%w: %s", ErrNotRegistered, name)
 	}
 
-	switch e.lifetime {
+	switch service.lifetime {
 	case Transient:
-		return reflect.New(e.value.Type()).Interface(), nil
+		return reflect.New(service.value.Type()).Interface(), nil
 	case Scoped:
-		return reflect.New(e.value.Type()).Interface(), nil
+		return reflect.New(service.value.Type()).Interface(), nil
 	case ThreadLocal:
-		return reflect.New(e.value.Type()).Interface(), nil
+		return reflect.New(service.value.Type()).Interface(), nil
 	case Pooled:
-		return reflect.New(e.value.Type()).Interface(), nil
+		return reflect.New(service.value.Type()).Interface(), nil
 	case Singleton:
-		return e.value.Interface(), nil
+		return service.value.Interface(), nil
 	default:
-		return nil, fmt.Errorf("%w: %s", ErrInvalidLifetime, e.lifetime.String())
+		return nil, fmt.Errorf("%w: %s", ErrInvalidLifetime, service.lifetime.String())
 	}
 }

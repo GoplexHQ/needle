@@ -4,10 +4,10 @@ type Lifetime string
 
 const (
 	Transient   Lifetime = "TRANSIENT"    // A new instance of the dependency is created each time it is requested.
-	Scoped      Lifetime = "SCOPED"       // A single instance of the dependency is created per scope, such as per web request or session.
+	Scoped      Lifetime = "SCOPED"       // A single instance of the dependency is created per scope, i.e. web request.
 	ThreadLocal Lifetime = "THREAD_LOCAL" // A single instance of the dependency is created per thread.
-	Pooled      Lifetime = "POOLED"       // Instances are maintained in a pool and reused to manage the overhead of creating and destroying instances frequently.
-	Singleton   Lifetime = "SINGLETON"    // A single instance of the dependency is created and shared throughout the entire lifetime of the application.
+	Pooled      Lifetime = "POOLED"       // Instances are pooled and reused to minimize creation and destruction overhead.
+	Singleton   Lifetime = "SINGLETON"    // A single instance is created and shared for the application's entire lifetime.
 )
 
 func (Lifetime) Values() []Lifetime {

@@ -59,16 +59,17 @@ func InjectStructFieldsFromStore[Dest any](store *Store, dest *Dest) error {
 	}
 
 	for i := range targetType.NumField() {
-		f := targetValue.Field(i)
-		ft := f.Type().Elem()
+		field := targetValue.Field(i)
+		ft := field.Type().Elem()
 
 		if internal.IsStructType(ft) {
-			s, err := resolveName(store, internal.ServiceName(ft))
+			service, err := resolveName(store, internal.ServiceName(ft))
 			if err != nil {
 				continue
 			}
-			f = reflect.NewAt(f.Type(), unsafe.Pointer(f.UnsafeAddr())).Elem()
-			f.Set(reflect.ValueOf(s))
+
+			field = reflect.NewAt(field.Type(), unsafe.Pointer(field.UnsafeAddr())).Elem()
+			field.Set(reflect.ValueOf(service))
 		}
 	}
 

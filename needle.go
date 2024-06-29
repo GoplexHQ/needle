@@ -2,6 +2,7 @@ package needle
 
 import "sync"
 
+//nolint:gochecknoglobals
 var (
 	globalStore *Store
 	once        sync.Once

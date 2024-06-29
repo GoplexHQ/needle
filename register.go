@@ -8,21 +8,19 @@ import (
 )
 
 // ensureRegistrable checks if a type is registrable and not already registered in the store.
-func ensureRegistrable[T any](store *Store) (t reflect.Type, name string, err error) {
-	t = reflect.TypeFor[T]()
-	name = internal.ServiceName(t)
+func ensureRegistrable[T any](store *Store) (reflect.Type, string, error) {
+	typ := reflect.TypeFor[T]()
+	name := internal.ServiceName(typ)
 
-	if !internal.IsStructType(t) {
-		err = fmt.Errorf("%w: %s", ErrInvalidType, name)
-		return
+	if !internal.IsStructType(typ) {
+		return nil, "", fmt.Errorf("%w: %s", ErrInvalidType, name)
 	}
 
 	if store.has(name) {
-		err = fmt.Errorf("%w: %s", ErrRegistered, name)
-		return
+		return nil, "", fmt.Errorf("%w: %s", ErrRegistered, name)
 	}
 
-	return
+	return typ, name, nil
 }
 
 // RegisterToStore registers a type with a specified lifetime to the store.
@@ -36,24 +34,23 @@ func ensureRegistrable[T any](store *Store) (t reflect.Type, name string, err er
 //	    ...
 //	}
 func RegisterToStore[T any](store *Store, lifetime Lifetime) error {
-	t, name, err := ensureRegistrable[T](store)
-
+	typ, name, err := ensureRegistrable[T](store)
 	if err != nil {
 		return err
 	}
 
-	e := entry{
+	newEntry := entry{ //nolint:exhaustruct
 		name:     name,
 		lifetime: lifetime,
 	}
 
 	if lifetime == Singleton {
-		e.value = reflect.New(t)
+		newEntry.value = reflect.New(typ)
 	} else {
-		e.value = reflect.Zero(t)
+		newEntry.value = reflect.Zero(typ)
 	}
 
-	store.set(name, e)
+	store.set(name, newEntry)
 
 	return nil
 }
@@ -85,7 +82,6 @@ func Register[T any](lifetime Lifetime) error {
 //	}
 func RegisterInstanceToStore[T any](store *Store, val *T) error {
 	_, name, err := ensureRegistrable[T](store)
-
 	if err != nil {
 		return err
 	}

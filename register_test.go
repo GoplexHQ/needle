@@ -5,6 +5,7 @@ import (
 
 	"github.com/goplexhq/needle"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNeedle_RegisterInvalidType(t *testing.T) {
@@ -18,7 +19,8 @@ func TestNeedle_RegisterDuplicate(t *testing.T) {
 	t.Cleanup(needle.Reset)
 
 	type testStruct struct{}
-	assert.NoError(t, needle.Register[testStruct](needle.Transient))
+
+	require.NoError(t, needle.Register[testStruct](needle.Transient))
 	assert.ErrorIs(t, needle.Register[testStruct](needle.Transient), needle.ErrRegistered)
 }
 
@@ -26,9 +28,8 @@ func TestNeedle_Register(t *testing.T) {
 	t.Cleanup(needle.Reset)
 
 	type testStruct struct{}
-	err := needle.Register[testStruct](needle.Transient)
 
-	assert.NoError(t, err)
+	require.NoError(t, needle.Register[testStruct](needle.Transient))
 
 	services := needle.RegisteredServices()
 	assert.Len(t, services, 1)
@@ -39,11 +40,12 @@ func TestNeedle_RegisterInstance(t *testing.T) {
 	t.Cleanup(needle.Reset)
 
 	type testStruct struct{ name string }
+
 	regErr := needle.RegisterInstance(&testStruct{name: "myStruct"})
-	assert.NoError(t, regErr)
+	require.NoError(t, regErr)
 
 	val, resErr := needle.Resolve[testStruct]()
-	assert.NoError(t, resErr)
+	require.NoError(t, resErr)
 	assert.NotNil(t, val)
 	assert.Equal(t, "myStruct", val.name)
 }
@@ -52,10 +54,11 @@ func TestNeedle_RegisterToStore(t *testing.T) {
 	t.Cleanup(needle.Reset)
 
 	type testStruct struct{}
+
 	store := needle.NewStore()
 
 	err := needle.RegisterToStore[testStruct](store, needle.Singleton)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	services := store.RegisteredServices()
 	assert.Len(t, services, 1)
@@ -66,14 +69,15 @@ func TestNeedle_RegisterInstanceToStore(t *testing.T) {
 	t.Cleanup(needle.Reset)
 
 	type testStruct struct{ name string }
+
 	store := needle.NewStore()
 
 	instance := &testStruct{name: "myStruct"}
 	regErr := needle.RegisterInstanceToStore(store, instance)
-	assert.NoError(t, regErr)
+	require.NoError(t, regErr)
 
 	val, resErr := needle.ResolveFromStore[testStruct](store)
-	assert.NoError(t, resErr)
+	require.NoError(t, resErr)
 	assert.NotNil(t, val)
 	assert.Equal(t, "myStruct", val.name)
 }

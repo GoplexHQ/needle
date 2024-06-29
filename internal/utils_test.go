@@ -4,13 +4,16 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/goplexhq/needle/internal"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/goplexhq/needle/internal"
 )
 
 func TestServiceName(t *testing.T) {
 	type testStruct struct{}
-	assert.Equal(t, "github.com/goplexhq/needle/internal_test.testStruct", internal.ServiceName(reflect.TypeOf(testStruct{})))
+
+	name := internal.ServiceName(reflect.TypeOf(testStruct{}))
+	assert.Equal(t, "github.com/goplexhq/needle/internal_test.testStruct", name)
 	assert.Equal(t, "", internal.ServiceName(reflect.TypeOf(struct{}{})))
 	assert.Equal(t, "", internal.ServiceName(reflect.TypeOf(nil)))
 }
