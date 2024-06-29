@@ -59,7 +59,7 @@ func TestNeedle_InjectStructFieldsInvalidType(t *testing.T) {
 		Dep Dep `needle:"inject"`
 	}
 
-	require.ErrorIs(t, needle.InjectStructFields(&TestStruct{}), needle.ErrFieldPtr)
+	require.ErrorIs(t, needle.InjectStructFields(&TestStruct{}), needle.ErrFieldPtr) //nolint:exhaustruct
 }
 
 func TestNeedle_InjectStructFieldsNotRegistered(t *testing.T) {

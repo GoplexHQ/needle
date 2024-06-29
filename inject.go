@@ -60,13 +60,13 @@ func InjectStructFieldsFromStore[Dest any](store *Store, dest *Dest) error {
 	targetValue := reflect.ValueOf(dest).Elem()
 	initializePointerValue(&targetValue)
 
-	for i := range targetType.NumField() {
-		fieldType := targetType.Field(i)
+	for idx := range targetType.NumField() {
+		fieldType := targetType.Field(idx)
 		if fieldType.Tag.Get(injectTagKey) != injectTagValue {
 			continue
 		}
 
-		fieldValue := targetValue.Field(i)
+		fieldValue := targetValue.Field(idx)
 		if err := injectField(store, fieldType, fieldValue); err != nil {
 			return err
 		}
