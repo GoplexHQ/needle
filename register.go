@@ -13,7 +13,7 @@ func ensureRegistrable[T any](store *Store) (reflect.Type, string, error) {
 	name := internal.ServiceName(typ)
 
 	if !internal.IsStructType(typ) {
-		return nil, "", fmt.Errorf("%w: %s", ErrInvalidType, name)
+		return nil, "", fmt.Errorf("%w: %s", ErrInvalidServiceType, name)
 	}
 
 	if store.has(name) {

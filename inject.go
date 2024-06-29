@@ -54,7 +54,7 @@ func InjectStructFieldsFromStore[Dest any](store *Store, dest *Dest) error {
 	targetName := internal.ServiceName(targetType)
 
 	if !internal.IsStructType(targetType) {
-		return fmt.Errorf("type %s is not a struct: %w", targetName, ErrInvalidType)
+		return fmt.Errorf("%w: %s", ErrInvalidDestType, targetName)
 	}
 
 	targetValue := reflect.ValueOf(dest).Elem()
@@ -92,7 +92,7 @@ func injectField(store *Store, fieldType reflect.StructField, fieldValue reflect
 	if internal.IsStructType(elemType) {
 		service, err := resolveName(store, internal.ServiceName(elemType))
 		if err != nil {
-			return fmt.Errorf("unable to resolve service for field %q: %w", fieldType.Name, err)
+			return fmt.Errorf("%w %q: %w", ErrResolveField, fieldType.Name, err)
 		}
 
 		fieldValue = reflect.NewAt(fieldValue.Type(), unsafe.Pointer(fieldValue.UnsafeAddr())).Elem()

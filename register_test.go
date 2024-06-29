@@ -12,7 +12,7 @@ func TestNeedle_RegisterInvalidType(t *testing.T) {
 	t.Cleanup(needle.Reset)
 
 	regErr := needle.Register[int](needle.Transient)
-	assert.ErrorIs(t, regErr, needle.ErrInvalidType)
+	assert.ErrorIs(t, regErr, needle.ErrInvalidServiceType)
 }
 
 func TestNeedle_RegisterDuplicate(t *testing.T) {
