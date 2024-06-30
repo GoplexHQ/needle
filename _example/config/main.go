@@ -30,12 +30,12 @@ func (a *App) Start() {
 }
 
 func main() {
-	err := needle.RegisterInstance(&Config{AppName: "MyApp", Version: "1.0.0"})
+	err := needle.RegisterSingletonInstance(&Config{AppName: "MyApp", Version: "1.0.0"})
 	if err != nil {
 		log.Fatalf("failed to register config: %v", err)
 	}
 
-	err = needle.RegisterInstance(&Logger{Prefix: "INFO"})
+	err = needle.RegisterSingletonInstance(&Logger{Prefix: "INFO"})
 	if err != nil {
 		log.Fatalf("failed to register logger: %v", err)
 	}
