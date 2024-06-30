@@ -16,7 +16,18 @@ const (
 // InjectStructFields injects dependencies into the fields of a struct using the global registry.
 // Returns an error if the injection fails.
 //
+// The optFuncs parameter allows for optional configuration of the injection, such as setting a scope or thread ID.
+//
+// Available options:
+// - WithScope(scope string): Sets a scope for resolving scoped dependencies.
+// - WithThreadID(threadID string): Sets a thread ID for resolving thread-local dependencies.
+//
+// Fields must be annotated with `needle:"inject"` for the needle framework to inject dependencies into them.
+// Additionally, the field must be a pointer to a struct.
+//
 // Example:
+//
+//	type MyDependency struct {}
 //
 //	type MyStruct struct {
 //	    Dep *MyDependency `needle:"inject"`
@@ -36,9 +47,20 @@ func InjectStructFields[Dest any](dest *Dest, optFuncs ...ResolutionOptionFunc) 
 // InjectStructFieldsFromRegistry injects dependencies into the fields of a struct using the specified registry.
 // Returns an error if the injection fails.
 //
+// The optFuncs parameter allows for optional configuration of the injection, such as setting a scope or thread ID.
+//
+// Available options:
+// - WithScope(scope string): Sets a scope for resolving scoped dependencies.
+// - WithThreadID(threadID string): Sets a thread ID for resolving thread-local dependencies.
+//
+// Fields must be annotated with `needle:"inject"` for the needle framework to inject dependencies into them.
+// Additionally, the field must be a pointer to a struct.
+//
 // Example:
 //
 //	registry := needle.NewRegistry()
+//
+//	type MyDependency struct {}
 //
 //	type MyStruct struct {
 //	    Dep *MyDependency `needle:"inject"`

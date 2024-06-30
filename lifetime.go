@@ -1,5 +1,6 @@
 package needle
 
+// Lifetime defines the lifecycle of a registered service.
 type Lifetime string
 
 const (
@@ -9,6 +10,7 @@ const (
 	Singleton   Lifetime = "SINGLETON"    // A single instance is created and shared for the application's entire lifetime.
 )
 
+// Values returns all possible values of Lifetime.
 func (Lifetime) Values() []Lifetime {
 	return []Lifetime{
 		Transient,
@@ -18,6 +20,7 @@ func (Lifetime) Values() []Lifetime {
 	}
 }
 
+// Valid checks if the Lifetime value is valid.
 func (lifetime Lifetime) Valid() bool {
 	for _, name := range lifetime.Values() {
 		if lifetime == name {
@@ -28,6 +31,7 @@ func (lifetime Lifetime) Valid() bool {
 	return false
 }
 
+// String returns the string representation of the Lifetime.
 func (lifetime Lifetime) String() string {
 	return string(lifetime)
 }

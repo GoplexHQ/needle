@@ -110,6 +110,7 @@ func (r *Registry) has(name string) (serviceEntry, bool) {
 	return entry, found
 }
 
+// hasScoped checks if a scoped service entry exists in the registry by scope and name.
 func (r *Registry) hasScoped(scope, name string) bool {
 	r.lock.RLock()
 	defer r.lock.RUnlock()
@@ -124,6 +125,7 @@ func (r *Registry) hasScoped(scope, name string) bool {
 	return found
 }
 
+// hasThreadLocal checks if a thread-local service entry exists in the registry by thread ID and name.
 func (r *Registry) hasThreadLocal(thread, name string) bool {
 	r.lock.RLock()
 	defer r.lock.RUnlock()
@@ -139,7 +141,7 @@ func (r *Registry) hasThreadLocal(thread, name string) bool {
 }
 
 // RegisteredServices returns a list of names of all registered services.
-// Service names are registryd in the following form "<pkg>.<service>".
+// Service names are registered in the following form "<pkg>.<service>".
 func (r *Registry) RegisteredServices() []string {
 	r.lock.RLock()
 	defer r.lock.RUnlock()
