@@ -74,6 +74,14 @@ func RegisterInstanceToRegistry[T any](reg *Registry, lifetime Lifetime, val *T,
 
 	opt := newResolutionOptions(optFns...)
 
+	if lifetime == Scoped && opt.scope == "" {
+		return ErrEmptyScope
+	}
+
+	if lifetime == ThreadLocal && opt.threadID == "" {
+		opt.threadID = internal.GetGoroutineID()
+	}
+
 	_, name, err := ensureRegistrable[T](reg, lifetime, opt)
 	if err != nil {
 		return err
