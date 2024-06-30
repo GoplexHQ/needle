@@ -13,7 +13,7 @@ const (
 	injectTagValue = "inject"
 )
 
-// InjectStructFields injects dependencies into the fields of a struct using the global store.
+// InjectStructFields injects dependencies into the fields of a struct using the global registry.
 // Returns an error if the injection fails.
 //
 // Example:
@@ -27,29 +27,29 @@ const (
 //	if err != nil {
 //	    ...
 //	}
-func InjectStructFields[Dest any](dest *Dest) error {
-	ensureGlobalStoreInitialized()
+func InjectStructFields[Dest any](dest *Dest, optFuncs ...ResolutionOptionFunc) error {
+	ensureGlobalRegistryInitialized()
 
-	return InjectStructFieldsFromStore[Dest](globalStore, dest)
+	return InjectStructFieldsFromRegistry[Dest](globalRegistry, dest, optFuncs...)
 }
 
-// InjectStructFieldsFromStore injects dependencies into the fields of a struct using the specified store.
+// InjectStructFieldsFromRegistry injects dependencies into the fields of a struct using the specified registry.
 // Returns an error if the injection fails.
 //
 // Example:
 //
-//	store := needle.NewStore()
+//	registry := needle.NewRegistry()
 //
 //	type MyStruct struct {
 //	    Dep *MyDependency `needle:"inject"`
 //	}
 //
 //	var myStruct MyStruct
-//	err := needle.InjectStructFieldsFromStore(store, &myStruct)
+//	err := needle.InjectStructFieldsFromRegistry(registry, &myStruct)
 //	if err != nil {
 //	    ...
 //	}
-func InjectStructFieldsFromStore[Dest any](store *Store, dest *Dest) error {
+func InjectStructFieldsFromRegistry[Dest any](registry *Registry, dest *Dest, optFuncs ...ResolutionOptionFunc) error {
 	targetType := reflect.TypeFor[Dest]()
 	targetName := internal.ServiceName(targetType)
 
@@ -60,6 +60,8 @@ func InjectStructFieldsFromStore[Dest any](store *Store, dest *Dest) error {
 	targetValue := reflect.ValueOf(dest).Elem()
 	initializePointerValue(&targetValue)
 
+	opt := newResolutionOptions(optFuncs...)
+
 	for idx := range targetType.NumField() {
 		fieldType := targetType.Field(idx)
 		if fieldType.Tag.Get(injectTagKey) != injectTagValue {
@@ -67,7 +69,7 @@ func InjectStructFieldsFromStore[Dest any](store *Store, dest *Dest) error {
 		}
 
 		fieldValue := targetValue.Field(idx)
-		if err := injectField(store, fieldType, fieldValue); err != nil {
+		if err := injectField(registry, fieldType, fieldValue, opt); err != nil {
 			return err
 		}
 	}
@@ -83,20 +85,35 @@ func initializePointerValue(value *reflect.Value) {
 }
 
 // injectField injects a dependency into a single struct field.
-func injectField(store *Store, fieldType reflect.StructField, fieldValue reflect.Value) error {
-	if !internal.IsPointerValue(fieldValue) {
-		return fmt.Errorf("%w: %s", ErrFieldPtr, fieldType.Name)
+func injectField(registry *Registry, field reflect.StructField, value reflect.Value, opt *ResolutionOptions) error {
+	if !internal.IsPointerValue(value) {
+		return fmt.Errorf("%w: %s", ErrFieldPtr, field.Name)
 	}
 
-	elemType := fieldValue.Type().Elem()
-	if internal.IsStructType(elemType) {
-		service, err := resolveName(store, internal.ServiceName(elemType))
-		if err != nil {
-			return fmt.Errorf("%w %q: %w", ErrResolveField, fieldType.Name, err)
+	elem := value.Type().Elem()
+	if internal.IsStructType(elem) {
+		name := internal.ServiceName(elem)
+
+		entry, exists := registry.has(name)
+		if !exists {
+			return fmt.Errorf("%w: %s", ErrNotRegistered, name)
 		}
 
-		fieldValue = reflect.NewAt(fieldValue.Type(), unsafe.Pointer(fieldValue.UnsafeAddr())).Elem()
-		fieldValue.Set(reflect.ValueOf(service))
+		if entry.lifetime == Scoped && opt.scope == "" {
+			return ErrEmptyScope
+		}
+
+		if entry.lifetime == ThreadLocal && opt.threadID == "" {
+			opt.threadID = internal.GetGoroutineID()
+		}
+
+		entryValue, err := resolveName(registry, name, opt)
+		if err != nil {
+			return fmt.Errorf("%w %q: %w", ErrResolveField, field.Name, err)
+		}
+
+		value = reflect.NewAt(value.Type(), unsafe.Pointer(value.UnsafeAddr())).Elem()
+		value.Set(reflect.ValueOf(entryValue))
 	}
 
 	return nil

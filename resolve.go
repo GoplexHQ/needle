@@ -7,7 +7,7 @@ import (
 	"github.com/goplexhq/needle/internal"
 )
 
-// Resolve resolves an instance of the specified type from the global store.
+// Resolve resolves an instance of the specified type from the global registry.
 // Returns a pointer to the resolved instance or an error if the instance cannot be resolved.
 //
 // Example:
@@ -16,27 +16,42 @@ import (
 //	if err != nil {
 //	    ...
 //	}
-func Resolve[T any]() (*T, error) {
-	ensureGlobalStoreInitialized()
+func Resolve[T any](optFuncs ...ResolutionOptionFunc) (*T, error) {
+	ensureGlobalRegistryInitialized()
 
-	return ResolveFromStore[T](globalStore)
+	return ResolveFromRegistry[T](globalRegistry, optFuncs...)
 }
 
-// ResolveFromStore resolves an instance of the specified type from the given store.
+// ResolveFromRegistry resolves an instance of the specified type from the given registry.
 // Returns a pointer to the resolved instance or an error if the instance cannot be resolved.
 //
 // Example:
 //
-//	store := needle.NewStore()
-//	val, err := needle.ResolveFromStore[MyService](store)
+//	registry := needle.NewRegistry()
+//	val, err := needle.ResolveFromRegistry[MyService](registry)
 //	if err != nil {
 //	    ...
 //	}
-func ResolveFromStore[T any](store *Store) (*T, error) {
+func ResolveFromRegistry[T any](registry *Registry, optFuncs ...ResolutionOptionFunc) (*T, error) {
 	t := reflect.TypeFor[T]()
 	name := internal.ServiceName(t)
 
-	i, err := resolveName(store, name)
+	opt := newResolutionOptions(optFuncs...)
+
+	entry, exists := registry.has(name)
+	if !exists {
+		return nil, fmt.Errorf("%w: %s", ErrNotRegistered, name)
+	}
+
+	if entry.lifetime == Scoped && opt.scope == "" {
+		return nil, ErrEmptyScope
+	}
+
+	if entry.lifetime == ThreadLocal && opt.threadID == "" {
+		opt.threadID = internal.GetGoroutineID()
+	}
+
+	i, err := resolveName(registry, name, opt)
 	if err != nil {
 		return nil, err
 	}
@@ -49,25 +64,16 @@ func ResolveFromStore[T any](store *Store) (*T, error) {
 	return v, nil
 }
 
-// resolveName resolves the instance by its name from the store.
-func resolveName(store *Store, name string) (any, error) {
-	service, ok := store.get(name)
-	if !ok {
+// resolveName resolves the instance by its name from the registry.
+func resolveName(registry *Registry, name string, opt *ResolutionOptions) (any, error) {
+	entry, exists := registry.get(name, opt)
+	if !exists {
 		return nil, fmt.Errorf("%w: %s", ErrNotRegistered, name)
 	}
 
-	switch service.lifetime {
-	case Transient:
-		return reflect.New(service.value.Type()).Interface(), nil
-	case Scoped:
-		return reflect.New(service.value.Type()).Interface(), nil
-	case ThreadLocal:
-		return reflect.New(service.value.Type()).Interface(), nil
-	case Pooled:
-		return reflect.New(service.value.Type()).Interface(), nil
-	case Singleton:
-		return service.value.Interface(), nil
-	default:
-		return nil, fmt.Errorf("%w: %s", ErrInvalidLifetime, service.lifetime.String())
+	if entry.lifetime == Transient {
+		return reflect.New(entry.value.Type()).Interface(), nil
 	}
+
+	return entry.value.Interface(), nil
 }

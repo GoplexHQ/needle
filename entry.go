@@ -2,8 +2,14 @@ package needle
 
 import "reflect"
 
-type entry struct {
+type serviceEntry struct {
 	name     string
 	lifetime Lifetime
-	value    reflect.Value
+	value    *reflect.Value
+}
+
+func (e *serviceEntry) withValue(value *reflect.Value) serviceEntry {
+	e.value = value
+
+	return *e
 }

@@ -7,55 +7,7 @@ import (
 	"github.com/goplexhq/needle/internal"
 )
 
-// ensureRegistrable checks if a type is registrable and not already registered in the store.
-func ensureRegistrable[T any](store *Store) (reflect.Type, string, error) {
-	typ := reflect.TypeFor[T]()
-	name := internal.ServiceName(typ)
-
-	if !internal.IsStructType(typ) {
-		return nil, "", fmt.Errorf("%w: %s", ErrInvalidServiceType, name)
-	}
-
-	if store.has(name) {
-		return nil, "", fmt.Errorf("%w: %s", ErrRegistered, name)
-	}
-
-	return typ, name, nil
-}
-
-// RegisterToStore registers a type with a specified lifetime to the store.
-// Returns an error if the type is already registered or invalid.
-//
-// Example:
-//
-//	store := needle.NewStore()
-//	err := needle.RegisterToStore[MyService](store, needle.Singleton)
-//	if err != nil {
-//	    ...
-//	}
-func RegisterToStore[T any](store *Store, lifetime Lifetime) error {
-	typ, name, err := ensureRegistrable[T](store)
-	if err != nil {
-		return err
-	}
-
-	newEntry := entry{ //nolint:exhaustruct
-		name:     name,
-		lifetime: lifetime,
-	}
-
-	if lifetime == Singleton {
-		newEntry.value = reflect.New(typ)
-	} else {
-		newEntry.value = reflect.Zero(typ)
-	}
-
-	store.set(name, newEntry)
-
-	return nil
-}
-
-// Register registers a type with a specified lifetime to the global store.
+// Register registers a type with a specified lifetime to the global registry.
 // Returns an error if the type is already registered or invalid.
 //
 // Example:
@@ -64,38 +16,52 @@ func RegisterToStore[T any](store *Store, lifetime Lifetime) error {
 //	if err != nil {
 //	    ...
 //	}
-func Register[T any](lifetime Lifetime) error {
-	ensureGlobalStoreInitialized()
+func Register[T any](lifetime Lifetime, optFuncs ...ResolutionOptionFunc) error {
+	ensureGlobalRegistryInitialized()
 
-	return RegisterToStore[T](globalStore, lifetime)
+	return RegisterToRegistry[T](globalRegistry, lifetime, optFuncs...)
 }
 
-// RegisterInstanceToStore registers a pre-initialized singleton instance to the store.
+// RegisterToRegistry registers a type with a specified lifetime to the registry.
 // Returns an error if the type is already registered or invalid.
 //
 // Example:
 //
-//	store := needle.NewStore()
-//	err := needle.RegisterInstanceToStore(store, &MyService{})
+//	registry := needle.NewRegistry()
+//	err := needle.RegisterToRegistry[MyService](registry, needle.Singleton)
 //	if err != nil {
 //	    ...
 //	}
-func RegisterInstanceToStore[T any](store *Store, val *T) error {
-	_, name, err := ensureRegistrable[T](store)
+func RegisterToRegistry[T any](registry *Registry, lifetime Lifetime, optFuncs ...ResolutionOptionFunc) error {
+	opt := newResolutionOptions(optFuncs...)
+
+	if lifetime == Scoped && opt.scope == "" {
+		return ErrEmptyScope
+	}
+
+	if lifetime == ThreadLocal && opt.threadID == "" {
+		opt.threadID = internal.GetGoroutineID()
+	}
+
+	typ, name, err := ensureRegistrable[T](registry, lifetime, opt)
 	if err != nil {
 		return err
 	}
 
-	store.set(name, entry{
-		name:     name,
-		lifetime: Singleton,
-		value:    reflect.ValueOf(val),
-	})
+	var value reflect.Value
+
+	if lifetime == Transient {
+		value = reflect.Zero(typ)
+	} else {
+		value = reflect.New(typ)
+	}
+
+	registry.set(name, lifetime, value, opt)
 
 	return nil
 }
 
-// RegisterInstance registers a pre-initialized singleton instance to the global store.
+// RegisterInstance registers a pre-initialized singleton instance to the global registry.
 // Returns an error if the type is already registered or invalid.
 //
 // Example:
@@ -104,8 +70,51 @@ func RegisterInstanceToStore[T any](store *Store, val *T) error {
 //	if err != nil {
 //	    ...
 //	}
-func RegisterInstance[T any](val *T) error {
-	ensureGlobalStoreInitialized()
+func RegisterInstance[T any](val *T, optFuncs ...ResolutionOptionFunc) error {
+	ensureGlobalRegistryInitialized()
 
-	return RegisterInstanceToStore[T](globalStore, val)
+	return RegisterInstanceToRegistry[T](globalRegistry, val, optFuncs...)
+}
+
+// RegisterInstanceToRegistry registers a pre-initialized singleton instance to the registry.
+// Returns an error if the type is already registered or invalid.
+//
+// Example:
+//
+//	registry := needle.NewRegistry()
+//	err := needle.RegisterInstanceToRegistry(registry, &MyService{})
+//	if err != nil {
+//	    ...
+//	}
+func RegisterInstanceToRegistry[T any](registry *Registry, val *T, optFuncs ...ResolutionOptionFunc) error {
+	opt := newResolutionOptions(optFuncs...)
+
+	_, name, err := ensureRegistrable[T](registry, Singleton, opt)
+	if err != nil {
+		return err
+	}
+
+	registry.set(name, Singleton, reflect.ValueOf(val), opt)
+
+	return nil
+}
+
+// ensureRegistrable checks if a type is registrable and not already registered in the registry.
+func ensureRegistrable[T any](reg *Registry, lifetime Lifetime, opt *ResolutionOptions) (reflect.Type, string, error) {
+	typ := reflect.TypeFor[T]()
+	name := internal.ServiceName(typ)
+
+	if !internal.IsStructType(typ) {
+		return nil, "", fmt.Errorf("%w: %s", ErrInvalidServiceType, name)
+	}
+
+	entry, exists := reg.has(name)
+	if exists && entry.lifetime == lifetime && (lifetime == Transient ||
+		lifetime == Singleton ||
+		(lifetime == Scoped && reg.hasScoped(opt.scope, name)) ||
+		(lifetime == ThreadLocal && reg.hasThreadLocal(opt.threadID, name))) {
+		return nil, "", fmt.Errorf("%w: %s", ErrRegistered, name)
+	}
+
+	return typ, name, nil
 }

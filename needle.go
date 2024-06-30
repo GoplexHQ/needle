@@ -4,36 +4,36 @@ import "sync"
 
 //nolint:gochecknoglobals
 var (
-	globalStore *Store
-	once        sync.Once
+	globalRegistry *Registry
+	once           sync.Once
 )
 
-// InitGlobalStore initializes the global store if it has not been initialized already.
-// This function is thread-safe and ensures that the store is only initialized once.
-func InitGlobalStore() {
+// InitGlobalRegistry initializes the global registry if it has not been initialized already.
+// This function is thread-safe and ensures that the registry is only initialized once.
+func InitGlobalRegistry() {
 	once.Do(func() {
-		globalStore = NewStore()
+		globalRegistry = NewRegistry()
 	})
 }
 
-// ensureGlobalStoreInitialized ensures that the global store is initialized.
-// This function should be called before any operations that require the global store.
-func ensureGlobalStoreInitialized() {
-	if globalStore == nil {
-		InitGlobalStore()
+// ensureGlobalRegistryInitialized ensures that the global registry is initialized.
+// This function should be called before any operations that require the global registry.
+func ensureGlobalRegistryInitialized() {
+	if globalRegistry == nil {
+		InitGlobalRegistry()
 	}
 }
 
-// RegisteredServices returns a list of names of all services registered in the global store.
+// RegisteredServices returns a list of names of all services registered in the global registry.
 func RegisteredServices() []string {
-	ensureGlobalStoreInitialized()
+	ensureGlobalRegistryInitialized()
 
-	return globalStore.RegisteredServices()
+	return globalRegistry.RegisteredServices()
 }
 
-// Reset clears all entries in the global store.
+// Reset clears all entries in the global registry.
 func Reset() {
-	ensureGlobalStoreInitialized()
+	ensureGlobalRegistryInitialized()
 
-	globalStore.Reset()
+	globalRegistry.Reset()
 }

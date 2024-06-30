@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestNeedle_RegisterInvalidType(t *testing.T) {
+func TestNeedle_Register_InvalidType(t *testing.T) {
 	t.Cleanup(needle.Reset)
 
 	regErr := needle.Register[int](needle.Transient)
@@ -50,34 +50,87 @@ func TestNeedle_RegisterInstance(t *testing.T) {
 	assert.Equal(t, "myStruct", val.name)
 }
 
-func TestNeedle_RegisterToStore(t *testing.T) {
+func TestNeedle_RegisterToRegistry(t *testing.T) {
 	t.Cleanup(needle.Reset)
 
 	type testStruct struct{}
 
-	store := needle.NewStore()
+	registry := needle.NewRegistry()
 
-	err := needle.RegisterToStore[testStruct](store, needle.Singleton)
+	err := needle.RegisterToRegistry[testStruct](registry, needle.Singleton)
 	require.NoError(t, err)
 
-	services := store.RegisteredServices()
+	services := registry.RegisteredServices()
 	assert.Len(t, services, 1)
 	assert.Contains(t, services, "github.com/goplexhq/needle_test.testStruct")
 }
 
-func TestNeedle_RegisterInstanceToStore(t *testing.T) {
+func TestNeedle_RegisterInstanceToRegistry(t *testing.T) {
 	t.Cleanup(needle.Reset)
 
 	type testStruct struct{ name string }
 
-	store := needle.NewStore()
+	registry := needle.NewRegistry()
 
 	instance := &testStruct{name: "myStruct"}
-	regErr := needle.RegisterInstanceToStore(store, instance)
+	regErr := needle.RegisterInstanceToRegistry(registry, instance)
 	require.NoError(t, regErr)
 
-	val, resErr := needle.ResolveFromStore[testStruct](store)
+	val, resErr := needle.ResolveFromRegistry[testStruct](registry)
 	require.NoError(t, resErr)
 	assert.NotNil(t, val)
 	assert.Equal(t, "myStruct", val.name)
+}
+
+func TestNeedle_RegisterScoped(t *testing.T) {
+	t.Cleanup(needle.Reset)
+
+	type testStruct struct{}
+
+	opt := needle.WithScope("my custom scope")
+	err := needle.Register[testStruct](needle.Scoped, opt)
+
+	require.NoError(t, err)
+
+	services := needle.RegisteredServices()
+	assert.Len(t, services, 1)
+	assert.Contains(t, services, "github.com/goplexhq/needle_test.testStruct")
+}
+
+func TestNeedle_RegisterScoped_EmptyScope(t *testing.T) {
+	t.Cleanup(needle.Reset)
+
+	type testStruct struct{}
+
+	err := needle.Register[testStruct](needle.Scoped)
+	require.ErrorIs(t, err, needle.ErrEmptyScope)
+
+	assert.Empty(t, needle.RegisteredServices())
+}
+
+func TestNeedle_RegisterThreadLocal(t *testing.T) {
+	t.Cleanup(needle.Reset)
+
+	type testStruct struct{}
+
+	require.NoError(t, needle.Register[testStruct](needle.ThreadLocal))
+
+	services := needle.RegisteredServices()
+	assert.Len(t, services, 1)
+	assert.Contains(t, services, "github.com/goplexhq/needle_test.testStruct")
+}
+
+func TestNeedle_RegisterThreadLocal_CustomThreadID(t *testing.T) {
+	t.Cleanup(needle.Reset)
+
+	type testStruct struct{}
+
+	opt := needle.WithThreadID("my custom thread id")
+	err := needle.Register[testStruct](needle.ThreadLocal, opt)
+
+	require.NoError(t, err)
+
+	services := needle.RegisteredServices()
+	assert.Len(t, services, 1)
+	assert.Contains(t, services, "github.com/goplexhq/needle_test.testStruct")
 }

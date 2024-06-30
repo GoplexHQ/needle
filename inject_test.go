@@ -26,10 +26,10 @@ func TestNeedle_InjectStructFields(t *testing.T) {
 	assert.Equal(t, "myDep", testStruct.Dep.name)
 }
 
-func TestNeedle_InjectStructFieldsFromStore(t *testing.T) {
+func TestNeedle_InjectStructFieldsFromRegistry(t *testing.T) {
 	t.Cleanup(needle.Reset)
 
-	store := needle.NewStore()
+	registry := needle.NewRegistry()
 
 	type Dep struct{ name string }
 
@@ -37,11 +37,11 @@ func TestNeedle_InjectStructFieldsFromStore(t *testing.T) {
 		Dep *Dep `needle:"inject"`
 	}
 
-	require.NoError(t, needle.RegisterInstanceToStore(store, &Dep{name: "myDep"}))
+	require.NoError(t, needle.RegisterInstanceToRegistry(registry, &Dep{name: "myDep"}))
 
 	var testStruct TestStruct
 
-	require.NoError(t, needle.InjectStructFieldsFromStore(store, &testStruct))
+	require.NoError(t, needle.InjectStructFieldsFromRegistry(registry, &testStruct))
 	assert.NotNil(t, testStruct.Dep)
 	assert.Equal(t, "myDep", testStruct.Dep.name)
 }

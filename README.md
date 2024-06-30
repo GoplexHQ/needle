@@ -6,7 +6,7 @@ lifetimes in a clean and efficient manner.
 ## Features
 
 - Simple API for registering and resolving dependencies
-- Supports multiple lifetimes: Singleton, Transient, Scoped, ThreadLocal, and Pooled
+- Supports multiple lifetimes: Singleton, Transient, Scoped, and ThreadLocal
 - Thread-safe service registry
 - Easy integration with existing Go projects
 
@@ -120,24 +120,24 @@ func main() {
 > **Note:** Fields that need dependency injection should be annotated with the `needle:"inject"` tag.
 > This tells Needle to inject the corresponding dependency into the field.
 
-### Custom Store
+### Custom Registry
 
-You can use a custom store to manage dependencies separately from the global store.
+You can use a custom registry to manage dependencies separately from the global registry.
 
 ```go
 type MyService struct{}
 
 func main() {
-    store := needle.NewStore()
+    registry := needle.NewRegistry()
 
-    err := needle.RegisterToStore[MyService](store, needle.Singleton)
+    err := needle.RegisterToRegistry[MyService](registry, needle.Singleton)
     if err != nil {
         log.Fatalf("failed to register service: %v", err)
     }
 
-    service, err := needle.ResolveFromStore[MyService](store)
+    service, err := needle.ResolveFromRegistry[MyService](registry)
     if err != nil {
-        log.Fatalf("failed to resolve service from store: %v", err)
+        log.Fatalf("failed to resolve service from registry: %v", err)
     }
 
     fmt.Println(service)
@@ -148,53 +148,53 @@ func main() {
 
 ### Functions
 
-#### `InitGlobalStore()`
+#### `InitGlobalRegistry()`
 
-Initializes the global store if it hasn't been initialized already.
+Initializes the global registry if it hasn't been initialized already.
 
 #### `RegisteredServices() []string`
 
-Returns a list of names of all services registered in the global store.
+Returns a list of names of all services registered in the global registry.
 
 #### `Reset()`
 
-Clears all entries in the global store.
+Clears all entries in the global registry.
 
 #### `Register[T any](lifetime Lifetime) error`
 
-Registers a type with the specified lifetime to the global store.
+Registers a type with the specified lifetime to the global registry.
 
 #### `RegisterInstance[T any](val *T) error`
 
-Registers a pre-initialized singleton instance to the global store.
+Registers a pre-initialized singleton instance to the global registry.
 
-#### `RegisterToStore[T any](store *Store, lifetime Lifetime) error`
+#### `RegisterToRegistry[T any](registry *Registry, lifetime Lifetime) error`
 
-Registers a type with the specified lifetime to the given store.
+Registers a type with the specified lifetime to the given registry.
 
-#### `RegisterInstanceToStore[T any](store *Store, val *T) error`
+#### `RegisterInstanceToRegistry[T any](registry *Registry, val *T) error`
 
-Registers a pre-initialized singleton instance to the given store.
+Registers a pre-initialized singleton instance to the given registry.
 
 #### `Resolve[T any]() (*T, error)`
 
-Resolves an instance of the specified type from the global store.
+Resolves an instance of the specified type from the global registry.
 
-#### `ResolveFromStore[T any](store *Store) (*T, error)`
+#### `ResolveFromRegistry[T any](registry *Registry) (*T, error)`
 
-Resolves an instance of the specified type from the given store.
+Resolves an instance of the specified type from the given registry.
 
 #### `InjectStructFields[Dest any](dest *Dest) error`
 
-Injects dependencies into the fields of a struct using the global store.
+Injects dependencies into the fields of a struct using the global registry.
 
-#### `InjectStructFieldsFromStore[Dest any](store *Store, dest *Dest) error`
+#### `InjectStructFieldsFromRegistry[Dest any](registry *Registry, dest *Dest) error`
 
-Injects dependencies into the fields of a struct using the specified store.
+Injects dependencies into the fields of a struct using the specified registry.
 
 ### Types
 
-#### `Store`
+#### `Registry`
 
 A thread-safe registry for storing service instances and their metadata.
 
@@ -205,7 +205,6 @@ Represents the lifetime of a service. Supported lifetimes:
 - `Transient`
 - `Scoped`
 - `ThreadLocal`
-- `Pooled`
 - `Singleton`
 
 ## Contributing
