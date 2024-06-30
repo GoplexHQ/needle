@@ -61,42 +61,51 @@ func RegisterToRegistry[T any](registry *Registry, lifetime Lifetime, optFuncs .
 	return nil
 }
 
-// RegisterInstance registers a pre-initialized singleton instance to the global registry.
-// Returns an error if the type is already registered or invalid.
-//
-// Example:
-//
-//	err := needle.RegisterInstance(&MyService{})
-//	if err != nil {
-//	    ...
-//	}
-func RegisterInstance[T any](val *T, optFuncs ...ResolutionOptionFunc) error {
+func RegisterInstance[T any](lifetime Lifetime, val *T, optFuncs ...ResolutionOptionFunc) error {
 	ensureGlobalRegistryInitialized()
 
-	return RegisterInstanceToRegistry[T](globalRegistry, val, optFuncs...)
+	return RegisterInstanceToRegistry[T](globalRegistry, lifetime, val, optFuncs...)
 }
 
-// RegisterInstanceToRegistry registers a pre-initialized singleton instance to the registry.
-// Returns an error if the type is already registered or invalid.
-//
-// Example:
-//
-//	registry := needle.NewRegistry()
-//	err := needle.RegisterInstanceToRegistry(registry, &MyService{})
-//	if err != nil {
-//	    ...
-//	}
-func RegisterInstanceToRegistry[T any](registry *Registry, val *T, optFuncs ...ResolutionOptionFunc) error {
+func RegisterInstanceToRegistry[T any](registry *Registry, lifetime Lifetime, val *T, optFuncs ...ResolutionOptionFunc) error {
+	if lifetime == Transient {
+		return ErrTransientInstance
+	}
+
 	opt := newResolutionOptions(optFuncs...)
 
-	_, name, err := ensureRegistrable[T](registry, Singleton, opt)
+	_, name, err := ensureRegistrable[T](registry, lifetime, opt)
 	if err != nil {
 		return err
 	}
 
-	registry.set(name, Singleton, reflect.ValueOf(val), opt)
+	registry.set(name, lifetime, reflect.ValueOf(val), opt)
 
 	return nil
+}
+
+func RegisterSingletonInstance[T any](val *T) error {
+	return RegisterInstance(Singleton, val)
+}
+
+func RegisterSingletonInstanceToRegistry[T any](registry *Registry, val *T) error {
+	return RegisterInstanceToRegistry(registry, Singleton, val)
+}
+
+func RegisterScopedInstance[T any](val *T, optFuncs ...ResolutionOptionFunc) error {
+	return RegisterInstance(Scoped, val, optFuncs...)
+}
+
+func RegisterScopedInstanceToRegistry[T any](registry *Registry, val *T, optFuncs ...ResolutionOptionFunc) error {
+	return RegisterInstanceToRegistry(registry, Scoped, val, optFuncs...)
+}
+
+func RegisterThreadLocalInstance[T any](val *T, optFuncs ...ResolutionOptionFunc) error {
+	return RegisterInstance(ThreadLocal, val, optFuncs...)
+}
+
+func RegisterThreadLocalInstanceToRegistry[T any](registry *Registry, val *T, optFuncs ...ResolutionOptionFunc) error {
+	return RegisterInstanceToRegistry(registry, ThreadLocal, val, optFuncs...)
 }
 
 // ensureRegistrable checks if a type is registrable and not already registered in the registry.

@@ -36,12 +36,12 @@ func TestNeedle_Register(t *testing.T) {
 	assert.Contains(t, services, "github.com/goplexhq/needle_test.testStruct")
 }
 
-func TestNeedle_RegisterInstance(t *testing.T) {
+func TestNeedle_RegisterSingletonInstance(t *testing.T) {
 	t.Cleanup(needle.Reset)
 
 	type testStruct struct{ name string }
 
-	regErr := needle.RegisterInstance(&testStruct{name: "myStruct"})
+	regErr := needle.RegisterSingletonInstance(&testStruct{name: "myStruct"})
 	require.NoError(t, regErr)
 
 	val, resErr := needle.Resolve[testStruct]()
@@ -65,7 +65,7 @@ func TestNeedle_RegisterToRegistry(t *testing.T) {
 	assert.Contains(t, services, "github.com/goplexhq/needle_test.testStruct")
 }
 
-func TestNeedle_RegisterInstanceToRegistry(t *testing.T) {
+func TestNeedle_RegisterSingletonInstanceToRegistry(t *testing.T) {
 	t.Cleanup(needle.Reset)
 
 	type testStruct struct{ name string }
@@ -73,7 +73,7 @@ func TestNeedle_RegisterInstanceToRegistry(t *testing.T) {
 	registry := needle.NewRegistry()
 
 	instance := &testStruct{name: "myStruct"}
-	regErr := needle.RegisterInstanceToRegistry(registry, instance)
+	regErr := needle.RegisterSingletonInstanceToRegistry(registry, instance)
 	require.NoError(t, regErr)
 
 	val, resErr := needle.ResolveFromRegistry[testStruct](registry)

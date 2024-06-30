@@ -11,4 +11,5 @@ var (
 	ErrFieldPtr            = errors.New("injectable field is not a pointer")
 	ErrResolveField        = errors.New("unable to resolve service for field")
 	ErrEmptyScope          = errors.New("scope is required but not provided")
+	ErrTransientInstance   = errors.New("transient lifetime does not support pre-initialized instances")
 )

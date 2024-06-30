@@ -22,7 +22,7 @@ go get github.com/goplexhq/needle
 
 ### Registering Services
 
-You can register services with different lifetimes using the `Register` and `RegisterInstance` functions.
+You can register services with different lifetimes using the `Register` and `RegisterSingletonInstance` functions.
 
 #### Register a Singleton
 
@@ -59,7 +59,7 @@ type MyService struct {
 
 func main() {
     instance := &MyService{Name: "myService"}
-    err := needle.RegisterInstance(instance)
+    err := needle.RegisterSingletonInstance(instance)
     if err != nil {
         log.Fatalf("failed to register service instance: %v", err)
     }
@@ -102,7 +102,7 @@ type MyService struct {
 }
 
 func main() {
-    err := needle.RegisterInstance(&Dep{Name: "myDep"})
+    err := needle.RegisterSingletonInstance(&Dep{Name: "myDep"})
     if err != nil {
         log.Fatalf("failed to register dependency: %v", err)
     }
@@ -164,7 +164,7 @@ Clears all entries in the global registry.
 
 Registers a type with the specified lifetime to the global registry.
 
-#### `RegisterInstance[T any](val *T) error`
+#### `RegisterSingletonInstance[T any](val *T) error`
 
 Registers a pre-initialized singleton instance to the global registry.
 
@@ -172,7 +172,7 @@ Registers a pre-initialized singleton instance to the global registry.
 
 Registers a type with the specified lifetime to the given registry.
 
-#### `RegisterInstanceToRegistry[T any](registry *Registry, val *T) error`
+#### `RegisterSingletonInstanceToRegistry[T any](registry *Registry, val *T) error`
 
 Registers a pre-initialized singleton instance to the given registry.
 

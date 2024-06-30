@@ -199,7 +199,7 @@ func TestNeedle_ResolveFromRegistry(t *testing.T) {
 
 	registry := needle.NewRegistry()
 
-	err := needle.RegisterInstanceToRegistry(registry, &testStruct{name: "myStruct"})
+	err := needle.RegisterSingletonInstanceToRegistry(registry, &testStruct{name: "myStruct"})
 	require.NoError(t, err)
 
 	val, resErr := needle.ResolveFromRegistry[testStruct](registry)

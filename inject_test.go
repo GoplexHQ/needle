@@ -17,7 +17,7 @@ func TestNeedle_InjectStructFields(t *testing.T) {
 		Dep *Dep `needle:"inject"`
 	}
 
-	require.NoError(t, needle.RegisterInstance(&Dep{name: "myDep"}))
+	require.NoError(t, needle.RegisterSingletonInstance(&Dep{name: "myDep"}))
 
 	var testStruct TestStruct
 
@@ -37,7 +37,7 @@ func TestNeedle_InjectStructFieldsFromRegistry(t *testing.T) {
 		Dep *Dep `needle:"inject"`
 	}
 
-	require.NoError(t, needle.RegisterInstanceToRegistry(registry, &Dep{name: "myDep"}))
+	require.NoError(t, needle.RegisterSingletonInstanceToRegistry(registry, &Dep{name: "myDep"}))
 
 	var testStruct TestStruct
 
