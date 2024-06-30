@@ -67,19 +67,19 @@ func RegisterInstance[T any](lifetime Lifetime, val *T, optFuncs ...ResolutionOp
 	return RegisterInstanceToRegistry[T](globalRegistry, lifetime, val, optFuncs...)
 }
 
-func RegisterInstanceToRegistry[T any](registry *Registry, lifetime Lifetime, val *T, optFuncs ...ResolutionOptionFunc) error {
+func RegisterInstanceToRegistry[T any](reg *Registry, lifetime Lifetime, val *T, optFns ...ResolutionOptionFunc) error {
 	if lifetime == Transient {
 		return ErrTransientInstance
 	}
 
-	opt := newResolutionOptions(optFuncs...)
+	opt := newResolutionOptions(optFns...)
 
-	_, name, err := ensureRegistrable[T](registry, lifetime, opt)
+	_, name, err := ensureRegistrable[T](reg, lifetime, opt)
 	if err != nil {
 		return err
 	}
 
-	registry.set(name, lifetime, reflect.ValueOf(val), opt)
+	reg.set(name, lifetime, reflect.ValueOf(val), opt)
 
 	return nil
 }
